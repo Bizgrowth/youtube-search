@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Search Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <div class="app-container">
+      <header class="glass-header">
+        <h1>VidiSearch</h1>
+        <p>Premium YouTube Exploration</p>
+      </header>
+      
+      <main>
+        <section class="search-section glass-panel">
+          <form id="search-form">
+            <div class="input-group">
+              <label for="search-query">Search Topic/Title</label>
+              <input type="text" id="search-query" placeholder="e.g. Advanced AI Programming" required />
+            </div>
+            
+            <div class="filters">
+              <div class="input-group">
+                <label for="month-year">Published After (Month/Year)</label>
+                <input type="month" id="month-year" />
+              </div>
+              
+              <div class="input-group">
+                <label for="sort-by">Sort By</label>
+                <select id="sort-by">
+                  <option value="relevance">Relevance</option>
+                  <option value="viewCount">Most Viewed</option>
+                  <option value="date">Upload Date</option>
+                  <option value="rating">Highest Rating</option>
+                </select>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn-primary">Search Videos</button>
+          </form>
+        </section>
+
+        <section class="results-section">
+          <div id="loader" class="loader hidden"></div>
+          <div id="error-message" class="error-message hidden"></div>
+          <div id="results-grid" class="results-grid">
+            <!-- Results injected here -->
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
