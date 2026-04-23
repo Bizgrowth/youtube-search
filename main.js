@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('search-form');
   const queryInput = document.getElementById('search-query');
   const monthYearInput = document.getElementById('month-year');
-  const sortSelect = document.getElementById('sort-by');
+  const primarySortSelect = document.getElementById('primary-sort');
+  const secondarySortSelect = document.getElementById('secondary-sort');
   const resultsGrid = document.getElementById('results-grid');
   const loader = document.getElementById('loader');
   const errorMessage = document.getElementById('error-message');
@@ -15,7 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = queryInput.value.trim();
     if (!query) return;
 
-    const order = sortSelect.value;
+    const order = primarySortSelect.value;
+    const secondaryOrder = secondarySortSelect.value;
     let publishedAfter = null;
 
     if (monthYearInput.value) {
@@ -30,8 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
     loader.classList.remove('hidden');
 
     try {
-      const videos = await searchYouTubeVideos({ query, publishedAfter, order });
-      renderVideos(videos);
+      let videos = await searchYouTubeVideos({ query, publishedAfter, order });
+      
+      // Apply secondary sort locally
+      if (secondaryOrder === 'mostViewed') {
+        videos.sort((a, b) => parseInt(b.viewCount) - parseInt(a.viewCount));
+      } else if (secondaryOrder === 'newest') {
+        videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+      }
+
+      // Display top 12 results for a nice grid
+      renderVideos(videos.slice(0, 12));
     } catch (error) {
       console.error(error);
       errorMessage.textContent = error.message;

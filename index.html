@@ -30,12 +30,22 @@
               </div>
               
               <div class="input-group">
-                <label for="sort-by">Sort By</label>
-                <select id="sort-by">
+                <label for="primary-sort">Primary Sort</label>
+                <select id="primary-sort">
                   <option value="relevance">Relevance</option>
                   <option value="viewCount">Most Viewed</option>
                   <option value="date">Upload Date</option>
                   <option value="rating">Highest Rating</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <label for="secondary-sort">Secondary Sort (Local)</label>
+                <select id="secondary-sort">
+                  <option value="none">None</option>
+                  <option value="mostViewed">Most Viewed</option>
+                  <option value="relevance">Relevance (Default)</option>
+                  <option value="newest">Newest First</option>
                 </select>
               </div>
             </div>

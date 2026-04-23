@@ -10,7 +10,7 @@ export async function searchYouTubeVideos({ query, publishedAfter, order }) {
   const url = new URL(`${BASE_URL}/search`);
   url.searchParams.append('part', 'snippet');
   url.searchParams.append('q', query);
-  url.searchParams.append('maxResults', '10');
+  url.searchParams.append('maxResults', '50'); // Increased to 50 for better local sorting
   url.searchParams.append('type', 'video');
   url.searchParams.append('key', API_KEY);
 
