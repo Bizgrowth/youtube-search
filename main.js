@@ -34,6 +34,19 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let videos = await searchYouTubeVideos({ query, publishedAfter, order });
       
+      // Strict Title Filtering
+      // YouTube's broad search returns viral videos that might only mention the keyword deep in tags.
+      // We force the longest word in the search query to be present in the video title.
+      const words = query.toLowerCase().split(/\s+/);
+      const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, "");
+      
+      if (longestWord.length > 2) {
+        const strictVideos = videos.filter(v => v.title.toLowerCase().includes(longestWord));
+        if (strictVideos.length >= 3) {
+          videos = strictVideos; // Apply strict filter if it leaves us with enough videos
+        }
+      }
+
       // Apply secondary sort locally
       if (secondaryOrder === 'mostViewed') {
         videos.sort((a, b) => parseInt(b.viewCount) - parseInt(a.viewCount));
