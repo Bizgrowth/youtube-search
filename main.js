@@ -34,25 +34,41 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let videos = await searchYouTubeVideos({ query, publishedAfter, order });
       
-      // Strict Title Filtering
-      // YouTube's broad search returns viral videos that might only mention the keyword deep in tags.
-      // We force the longest word in the search query to be present in the video title.
-      const words = query.toLowerCase().split(/\s+/);
-      const longestWord = words.reduce((a, b) => a.length > b.length ? a : b, "");
+      // Calculate a "Match Score" for each video based on how many query words appear in the title
+      const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 1); // Ignore single letters
       
-      if (longestWord.length > 2) {
-        const strictVideos = videos.filter(v => v.title.toLowerCase().includes(longestWord));
-        if (strictVideos.length >= 3) {
-          videos = strictVideos; // Apply strict filter if it leaves us with enough videos
+      videos.forEach(video => {
+        const title = video.title.toLowerCase();
+        let score = 0;
+        words.forEach(word => {
+          if (title.includes(word)) score += 1;
+        });
+        video.matchScore = score;
+      });
+
+      // Filter out videos that have a score of 0 (no words matched the title at all)
+      if (words.length > 0) {
+        const filteredVideos = videos.filter(v => v.matchScore > 0);
+        if (filteredVideos.length >= 3) {
+          videos = filteredVideos;
         }
       }
 
-      // Apply secondary sort locally
-      if (secondaryOrder === 'mostViewed') {
-        videos.sort((a, b) => parseInt(b.viewCount) - parseInt(a.viewCount));
-      } else if (secondaryOrder === 'newest') {
-        videos.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-      }
+      // Sort locally: First by matchScore, THEN by the secondary sort (e.g. viewCount)
+      videos.sort((a, b) => {
+        // Primary Local Sort: Keyword Relevance in Title
+        if (b.matchScore !== a.matchScore) {
+          return b.matchScore - a.matchScore;
+        }
+        
+        // Secondary Local Sort: User's selected filter
+        if (secondaryOrder === 'mostViewed') {
+          return parseInt(b.viewCount) - parseInt(a.viewCount);
+        } else if (secondaryOrder === 'newest') {
+          return new Date(b.publishedAt) - new Date(a.publishedAt);
+        }
+        return 0; // fallback if no secondary order
+      });
 
       // Display top 12 results for a nice grid
       renderVideos(videos.slice(0, 12));

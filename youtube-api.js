@@ -13,6 +13,7 @@ export async function searchYouTubeVideos({ query, publishedAfter, order }) {
   url.searchParams.append('maxResults', '50'); // Increased to 50 for better local sorting
   url.searchParams.append('type', 'video');
   url.searchParams.append('key', API_KEY);
+  url.searchParams.append('relevanceLanguage', 'en'); // Ensure English results
 
   if (order) {
     url.searchParams.append('order', order);
