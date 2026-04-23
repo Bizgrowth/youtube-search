@@ -34,19 +34,50 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let videos = await searchYouTubeVideos({ query, publishedAfter, order });
       
-      // Calculate a "Match Score" for each video based on how many query words appear in the title
-      const words = query.toLowerCase().split(/\s+/).filter(w => w.length > 1); // Ignore single letters
+      // Calculate an advanced "Match Score" for each video
+      const queryLower = query.toLowerCase();
+      const words = queryLower.split(/\s+/).filter(w => w.length > 1); // Ignore single letters
       
       videos.forEach(video => {
         const title = video.title.toLowerCase();
+        const description = (video.description || '').toLowerCase();
+        const channelTitle = (video.channelTitle || '').toLowerCase();
         let score = 0;
+
+        // 1. Exact Phrase Match in Title gets a massive boost
+        if (title.includes(queryLower)) {
+          score += 50;
+        }
+
         words.forEach(word => {
-          if (title.includes(word)) score += 1;
+          // Escape word for regex
+          const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const wordRegex = new RegExp(`\\b${escapedWord}\\b`, 'i');
+
+          // 2. Exact word match in Title
+          if (wordRegex.test(title)) {
+            score += 10;
+          } 
+          // 3. Partial word match in Title (e.g. "car" in "cardboard")
+          else if (title.includes(word)) {
+            score += 2;
+          }
+
+          // 4. Exact word match in Channel Name
+          if (wordRegex.test(channelTitle)) {
+            score += 5;
+          }
+
+          // 5. Exact word match in Description
+          if (wordRegex.test(description)) {
+            score += 1;
+          }
         });
+        
         video.matchScore = score;
       });
 
-      // Filter out videos that have a score of 0 (no words matched the title at all)
+      // Filter out videos that have a score of 0 (no relevance at all)
       if (words.length > 0) {
         const filteredVideos = videos.filter(v => v.matchScore > 0);
         if (filteredVideos.length >= 3) {
@@ -98,24 +129,34 @@ document.addEventListener('DOMContentLoaded', () => {
       const views = parseInt(video.viewCount).toLocaleString();
 
       const card = document.createElement('div');
-      card.className = 'video-card';
+      card.className = 'bg-[#1F2328] border border-[#444C56] rounded-xl overflow-hidden hover:border-[#2F81F7] transition-all duration-300 group flex flex-col shadow-lg hover:shadow-[#2F81F7]/10';
       
       card.innerHTML = `
-        <div class="video-thumbnail">
-          <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer">
-            <img src="${video.thumbnail}" alt="${video.title}">
+        <div class="relative aspect-video overflow-hidden bg-[#101418]">
+          <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer" class="block w-full h-full">
+            <img src="${video.thumbnail}" alt="${video.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           </a>
         </div>
-        <div class="video-info">
-          <h3 class="video-title">
-            <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+        <div class="p-4 flex flex-col flex-1">
+          <h3 class="text-sm font-semibold text-white mb-1 line-clamp-2 font-['Space_Grotesk'] leading-tight group-hover:text-[#2F81F7] transition-colors">
+            <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" rel="noopener noreferrer" class="focus:outline-none">
               ${video.title}
             </a>
           </h3>
-          <p class="video-channel">${video.channelTitle}</p>
-          <div class="video-meta">
-            <span>${views} views</span>
-            <span>${date}</span>
+          <p class="text-xs text-gray-400 flex items-center gap-1 mb-3">
+            <span class="material-symbols-outlined text-[14px]">account_circle</span>
+            <span class="truncate">${video.channelTitle}</span>
+          </p>
+          <div class="flex items-center gap-3 text-xs text-[#8B949E] mt-auto pt-3 border-t border-[#444C56]/50">
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">visibility</span>
+              ${views}
+            </span>
+            <span class="flex items-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+              ${date}
+            </span>
           </div>
         </div>
       `;
