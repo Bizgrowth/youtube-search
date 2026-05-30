@@ -1,7 +1,7 @@
 const API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 const BASE_URL = 'https://www.googleapis.com/youtube/v3';
 
-export async function searchYouTubeVideos({ query, publishedAfter, order }) {
+export async function searchYouTubeVideos({ query, publishedAfter, order, pageToken }) {
   if (!API_KEY) {
     throw new Error('YouTube API Key is missing. Please add it to your .env file.');
   }
@@ -9,7 +9,8 @@ export async function searchYouTubeVideos({ query, publishedAfter, order }) {
   // Construct URL
   const url = new URL(`${BASE_URL}/search`);
   url.searchParams.append('part', 'snippet');
-  url.searchParams.append('q', query);
+  const modifiedQuery = `${query} (tutorial | course | guide | masterclass | explained)`;
+  url.searchParams.append('q', modifiedQuery);
   url.searchParams.append('maxResults', '50'); // Increased to 50 for better local sorting
   url.searchParams.append('type', 'video');
   url.searchParams.append('key', API_KEY);
@@ -24,6 +25,10 @@ export async function searchYouTubeVideos({ query, publishedAfter, order }) {
     url.searchParams.append('publishedAfter', publishedAfter);
   }
 
+  if (pageToken) {
+    url.searchParams.append('pageToken', pageToken);
+  }
+
   const response = await fetch(url);
   const data = await response.json();
 
@@ -36,7 +41,7 @@ export async function searchYouTubeVideos({ query, publishedAfter, order }) {
   const videoIds = data.items.map(item => item.id.videoId).join(',');
   
   if (!videoIds) {
-    return [];
+    return { items: [], nextPageToken: null };
   }
 
   const statsUrl = new URL(`${BASE_URL}/videos`);
@@ -52,7 +57,7 @@ export async function searchYouTubeVideos({ query, publishedAfter, order }) {
   }
 
   // Map stats back to the items
-  return statsData.items.map(item => {
+  const items = statsData.items.map(item => {
     return {
       id: item.id,
       title: item.snippet.title,
@@ -60,7 +65,10 @@ export async function searchYouTubeVideos({ query, publishedAfter, order }) {
       thumbnail: item.snippet.thumbnails.medium.url,
       channelTitle: item.snippet.channelTitle,
       publishedAt: item.snippet.publishedAt,
-      viewCount: item.statistics.viewCount || '0'
+      viewCount: item.statistics.viewCount || '0',
+      likeCount: item.statistics.likeCount || '0'
     };
   });
+
+  return { items, nextPageToken: data.nextPageToken };
 }
